@@ -22,6 +22,10 @@
 			}
 		]
 	},
+	"ai": { 
+		"binding": "AI",
+		"remote": true,
+	 },
 	"migrations": [
 		{
 		"tag": "v1",

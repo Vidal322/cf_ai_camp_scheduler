@@ -2,6 +2,7 @@ import { DurableObject} from 'cloudflare:workers'
 
 type Env = {
     SESSION: DurableObjectNamespace
+    AI: Ai
 }
 
 export class Session extends DurableObject<Env> {
@@ -33,9 +34,17 @@ export class Session extends DurableObject<Env> {
         });
     }
 
-    async webSocketMessage(ws: WebSocket, message: ArrayBuffer | string ) {
+    async webSocketMessage(ws: WebSocket, message: string ) {
 
-        ws.send(`[DO] message: ${message}`);
+        const response = await this.env.AI.run('@cf/meta/llama-3.3-70b-instruct-fp8-fast', {
+            messages: [ 
+                {role: 'system', content: 'You are helping build a schedule for a summer camp'},
+                {role: 'user', content: message as string}
+            ]
+        });
+        const result = response as {response: string}
+
+        ws.send(`response: ${result.response}`);
 
     }
 
@@ -45,13 +54,4 @@ export class Session extends DurableObject<Env> {
 
     }
 
-    async sayHello(): Promise <string> {
-
-        let result = this.ctx.storage.sql
-            .exec('SELECT "Hello, World, from DO!" AS message')
-            .one();
-
-
-        return result.message as string;
-    }
 }

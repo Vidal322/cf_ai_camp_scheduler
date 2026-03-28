@@ -11,12 +11,6 @@ app.get('/', (c) => {
   return c.text('Hello, World!')
 })
 
-app.get('/hello', async (c) => {
-  const id = c.env.SESSION.idFromName('SESSION');
-  const stub = c.env.SESSION.get(id);
-  const message = await stub.sayHello();
-  return c.text(message);
-});
 
 app.get('/ws', async (c) => {
 
