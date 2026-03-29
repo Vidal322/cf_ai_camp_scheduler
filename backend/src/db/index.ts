@@ -28,6 +28,18 @@ export async function createActivity(
     return result.meta.last_row_id;
 }
 
+export async function createSchedule(
+    db: D1Database,
+    camp_id: number
+): Promise<number> {
+    console.log('Creating schedule for camp_id', camp_id);
+    const result = await db.prepare(
+        'INSERT INTO Schedule (camp_id) VALUES (?)'
+    ).bind(camp_id).run();
+
+    return result.meta.last_row_id;
+}
+
 export async function createRoom(
     db: D1Database,
     name: string,
