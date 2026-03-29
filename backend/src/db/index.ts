@@ -12,3 +12,18 @@ export async function createCamp(
 
     return result.meta.last_row_id;
 }
+
+
+export async function createActivity(
+    db: D1Database,
+    name: string,
+    category: 'sport' | 'cultural' | 'slow',
+    is_indoor: 0 | 1,
+    description: string
+): Promise<number> {
+    const result = await db.prepare(
+        'INSERT INTO Activity (name, category, is_indoor, description) VALUES (?, ?, ?, ?)'
+    ).bind(name, category, is_indoor, description).run();
+
+    return result.meta.last_row_id;
+}

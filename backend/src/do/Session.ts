@@ -108,7 +108,9 @@ export class Session extends DurableObject<Env> {
      * @returns 
      */
     private async runAI(messages: any[], message: string) {
-        const isAction = this.actionKeywords.some(k => message.toLowerCase().includes(k));
+        const questionWords = ['can you', 'do you', 'what', 'how', 'why', 'would you'];
+        const isQuestion = questionWords.some(q => message.toLowerCase().includes(q));
+        const isAction = !isQuestion && this.actionKeywords.some(k => message.toLowerCase().includes(k));
         return await this.env.AI.run(this.model, {
             messages,
             tool_choice: isAction ? 'auto' : undefined,

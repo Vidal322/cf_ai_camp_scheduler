@@ -1,4 +1,4 @@
-import { createCamp } from '../db/camp';
+import { createCamp, createActivity } from '../db/index';
 
 export interface AiTool {
     definition: {
@@ -20,7 +20,32 @@ export interface AiTool {
                                                                                                                                                                                               
 export function createTools(db: D1Database): Record<string, AiTool> {    
     return {
-        create_camp: createToolCreateCamp(db)
+        create_camp: createToolCreateCamp(db),
+        create_activity: createToolCreateActivity(db)
+    }
+}
+
+function createToolCreateActivity(db: D1Database): AiTool {
+    return {
+        definition: {
+            type: 'function',
+            function: {
+                name: 'create_activity',
+                description: 'Creates a new activity for a summer camp',
+                parameters: {
+                    type: 'object',
+                    properties: {
+                        name: { type: 'string', description: 'Name of the activity' },
+                        category: { type: 'string', description: 'Category of the activity: sport, cultural, or slow' },
+                        is_indoor: { type: 'number', description: 'Whether the activity is indoor (1) or outdoor (0)' },
+                        description: { type: 'string', description: 'Description of the activity' }
+                    },
+                    required: ['name', 'category', 'is_indoor', 'description']
+                }
+            }
+        },
+        handler: (args) => createActivity(db, args.name, args.category, args.is_indoor, args.description),
+        message: (result) => `[Tool Used: Create Activity] Activity created with id ${result}`
     }
 }
 
