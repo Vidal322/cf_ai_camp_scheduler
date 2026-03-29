@@ -1,4 +1,4 @@
-import { createCamp, createActivity } from '../db/index';
+import { createCamp, createActivity, createRoom } from '../db/index';
 
 export interface AiTool {
     definition: {
@@ -21,7 +21,8 @@ export interface AiTool {
 export function createTools(db: D1Database): Record<string, AiTool> {    
     return {
         create_camp: createToolCreateCamp(db),
-        create_activity: createToolCreateActivity(db)
+        create_activity: createToolCreateActivity(db),
+        create_room: createToolCreateRoom(db)
     }
 }
 
@@ -46,6 +47,30 @@ function createToolCreateActivity(db: D1Database): AiTool {
         },
         handler: (args) => createActivity(db, args.name, args.category, args.is_indoor, args.description),
         message: (result) => `[Tool Used: Create Activity] Activity created with id ${result}`
+    }
+}
+
+function createToolCreateRoom(db: D1Database): AiTool {
+    return {
+        definition: {
+            type: 'function',
+            function: {
+                name: 'create_room',
+                description: 'Creates a new room for a summer camp',
+                parameters: {
+                    type: 'object',
+                    properties: {
+                        name: { type: 'string', description: 'Name of the room' },
+                        capacity: { type: 'number', description: 'Maximum number of campers the room can hold' },
+                        is_indoor: { type: 'number', description: 'Whether the room is indoor (1) or outdoor (0)' },
+                        description: { type: 'string', description: 'Description of the room' }
+                    },
+                    required: ['name', 'capacity', 'is_indoor', 'description']
+                }
+            }
+        },
+        handler: (args) => createRoom(db, args.name, args.capacity, args.is_indoor, args.description),
+        message: (result) => `[Tool Used: Create Room] Room created with id ${result}`
     }
 }
 

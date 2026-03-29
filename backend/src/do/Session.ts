@@ -12,7 +12,7 @@ export class Session extends DurableObject<Env> {
     private readonly tools: Record<string, AiTool>;
 
     private readonly model = '@cf/meta/llama-3.3-70b-instruct-fp8-fast';
-    private readonly actionKeywords = ['create', 'add', 'assign', 'make', 'build', 'new'];
+    private readonly actionKeywords = ['create', 'add', 'assign', 'make', 'build', 'new', 'there is', 'i have a', 'set up'];
 
     private readonly systemPrompt;
     constructor(ctx: DurableObjectState, env: Env) {
