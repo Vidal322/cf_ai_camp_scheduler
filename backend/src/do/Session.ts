@@ -1,4 +1,5 @@
-import { DurableObject} from 'cloudflare:workers'
+import { DurableObject} from 'cloudflare:workers';
+import { createCamp } from '../db/camp';
 
 type Env = {
     SESSION: DurableObjectNamespace
@@ -12,6 +13,29 @@ export class Session extends DurableObject<Env> {
     super(ctx, env)
 
     }
+
+    private readonly tools = [                                                                                                                                                                  
+        {
+            type: 'function',                                                                                                                                                                   
+            function: {
+                name: 'create_camp',
+                description: 'Creates a new summer camp',                                                                                                                                       
+                parameters: {
+                    type: 'object',                                                                                                                                                             
+                    properties: {
+                        name: { type: 'string', description: 'Name of the camp' },
+                        description: { type: 'string', description: 'Description of the camp' },                                                                                                
+                        quantity: { type: 'number', description: 'Number of campers' },
+                        start_date: { type: 'string', description: 'Start date YYYY-MM-DD' },                                                                                                   
+                        end_date: { type: 'string', description: 'End date YYYY-MM-DD' }
+                    },                                                                                                                                                                          
+                    required: ['name', 'description', 'quantity', 'start_date', 'end_date']
+                }                                                                                                                                                                               
+            }       
+        }
+    ]         
+
+    
     /**
      * Handles incoming requests
      * Websocket upgrade connections are handled by handleWebSocket()
@@ -100,15 +124,27 @@ export class Session extends DurableObject<Env> {
 
 
         const response = await this.env.AI.run('@cf/meta/llama-3.3-70b-instruct-fp8-fast', {
-            messages: messages
-        });
+            messages: messages,
+            tools: this.tools
+        }) as {response: string, tool_calls?: any[]};
+
+        if ('tool_calls' in response && response.tool_calls) {
+            for (const toolCall of response.tool_calls) {
+                if (toolCall.name === 'create_camp') {
+                    const args = toolCall.arguments as {name: string, description: string, quantity: number, start_date: string, end_date: string};
+                    const campId = await createCamp(this.env.D1Database, args.name, args.description, args.quantity, args.start_date, args.end_date);
+                    
+                    ws.send(JSON.stringify({ type: 'tool_result', tool: 'create_camp', campId }));                                                                                                  
+
+                }
+            }
+        } else {
+
+            await this.saveChatMessage(campID, 'ai', response.response);
+            ws.send(`response: ${response.response}`);
+        } 
 
 
-        const result = response as {response: string}
-
-        await this.saveChatMessage(campID, 'ai', result.response);
-
-        ws.send(`response: ${result.response}`);
 
     }
 
