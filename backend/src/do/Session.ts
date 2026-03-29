@@ -12,7 +12,7 @@ export class Session extends DurableObject<Env> {
     private readonly tools: Record<string, AiTool>;
 
     private readonly model = '@cf/meta/llama-3.3-70b-instruct-fp8-fast';
-    private readonly actionKeywords = ['create', 'add', 'assign', 'make', 'build', 'new', 'there is', 'i have a', 'set up'];
+    private readonly actionKeywords = ['create', 'add', 'assign', 'assignslot', 'assign slot', 'make', 'build', 'new', 'there is', 'i have a', 'set up'];
 
     private readonly systemPrompt;
     constructor(ctx: DurableObjectState, env: Env) {
@@ -111,11 +111,13 @@ export class Session extends DurableObject<Env> {
         const questionWords = ['can you', 'do you', 'what', 'how', 'why', 'would you'];
         const isQuestion = questionWords.some(q => message.toLowerCase().includes(q));
         const isAction = !isQuestion && this.actionKeywords.some(k => message.toLowerCase().includes(k));
-        return await this.env.AI.run(this.model, {
+        const response = await this.env.AI.run(this.model, {
             messages,
             tool_choice: isAction ? 'auto' : undefined,
             tools: isAction ? Object.values(this.tools).map(t => t.definition) : undefined
         }) as { response: string, tool_calls?: any[] };
+        return response;                                                                                                                                             
+
     }
 
     /**
@@ -131,16 +133,17 @@ export class Session extends DurableObject<Env> {
     private async handleToolCalls(ws: WebSocket, campId: number, toolCalls: any[], messages: any[]) {
         for (const toolCall of toolCalls) {
             const tool = this.tools[toolCall.name];
+            const args = toolCall.arguments ?? toolCall.parameters;
             if (tool) {
-                const toolResult = await tool.handler(toolCall.arguments);
+                const toolResult = await tool.handler(args);
                 const toolMessage = tool.message(toolResult);
+                ws.send(toolMessage);
 
                 const followUp = await this.env.AI.run(this.model, {
                     messages: [...messages, { role: 'assistant', content: toolMessage }]
                 }) as { response: string };
 
                 await this.saveChatMessage(campId, 'ai', followUp.response);
-                ws.send(toolMessage);
                 ws.send(followUp.response);
             }
         }
@@ -162,8 +165,13 @@ export class Session extends DurableObject<Env> {
         const messages = await this.buildMessages(campID, message);
         const response = await this.runAI(messages, message);
 
-        if (response.tool_calls && response.tool_calls.length > 0) {
-            await this.handleToolCalls(ws, campID, response.tool_calls, messages);
+        const toolCallFromResponse =
+            response.response && typeof response.response === 'object' && (response.response as any).type === 'function'
+                ? [response.response as any]
+                : response.tool_calls;
+
+        if (toolCallFromResponse && toolCallFromResponse.length > 0) {
+            await this.handleToolCalls(ws, campID, toolCallFromResponse, messages);
         } else {
             await this.saveChatMessage(campID, 'ai', response.response);
             ws.send(response.response);

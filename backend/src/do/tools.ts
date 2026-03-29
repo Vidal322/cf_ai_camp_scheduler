@@ -1,4 +1,4 @@
-import { createCamp, createActivity, createRoom, createSchedule } from '../db/index';
+import { createCamp, createActivity, createRoom, createSchedule, assignSlot, getActivities, getRooms, searchActivities, searchRooms } from '../db/index';
 
 export interface AiTool {
     definition: {
@@ -23,7 +23,10 @@ export function createTools(db: D1Database): Record<string, AiTool> {
         create_camp: createToolCreateCamp(db),
         create_activity: createToolCreateActivity(db),
         create_room: createToolCreateRoom(db),
-        create_schedule: createToolCreateSchedule(db)
+        create_schedule: createToolCreateSchedule(db),
+        assign_slot: createToolAssignSlot(db),
+        get_activities: createToolGetActivities(db),
+        get_rooms: createToolGetRooms(db)
     }
 }
 
@@ -50,6 +53,76 @@ function createToolCreateActivity(db: D1Database): AiTool {
         message: (result) => `[Tool Used: Create Activity] Activity created with id ${result}`
     }
 }
+
+function createToolGetActivities(db: D1Database): AiTool {
+    return {
+        definition: {
+            type: 'function',
+            function: {
+                name: 'get_activities',
+                description: 'Retrieves all available activities with their ids, names, categories and descriptions',
+                parameters: {
+                    type: 'object',
+                    properties: {},
+                    required: []
+                }
+            }
+        },
+        handler: () => getActivities(db),
+        message: (result) => `[Tool Used: Get Activities] Activities: ${JSON.stringify(result)}`
+    }
+}
+
+function createToolGetRooms(db: D1Database): AiTool {
+    return {
+        definition: {
+            type: 'function',
+            function: {
+                name: 'get_rooms',
+                description: 'Retrieves all available rooms with their ids, names, capacities and descriptions',
+                parameters: {
+                    type: 'object',
+                    properties: {},
+                    required: []
+                }
+            }
+        },
+        handler: () => getRooms(db),
+        message: (result) => `[Tool Used: Get Rooms] Rooms: ${JSON.stringify(result)}`
+    }
+}
+
+function createToolAssignSlot(db: D1Database): AiTool {
+    return {
+        definition: {
+            type: 'function',
+            function: {
+                name: 'assign_slot',
+                description: 'Assigns an activity to a schedule slot for a specific day and period, given the activity name, room name, day and periord, and schedule number of a camp. It will search for the activity and room based on the provided names and use the first result to assign the slot.',
+                parameters: {
+                    type: 'object',
+                    properties: {
+                        schedule_id: { type: 'number', description: 'The id of the schedule' },
+                        activity_name: { type: 'string', description: 'The name of the activity' },
+                        room_name: { type: 'string', description: 'The name or description of the room' },
+                        day: { type: 'number', description: 'Day of the week (1-7)' },
+                        period: { type: 'string', description: 'Period of the day: morning or afternoon' }
+                    },
+                    required: ['schedule_id', 'activity_name', 'room_name', 'day', 'period']
+                }
+            }
+        },
+        handler: async (args) => {
+            const activities = await searchActivities(db, args.activity_name) as { id: number, name: string }[];
+            const rooms = await searchRooms(db, args.room_name) as { id: number, name: string }[];
+            if (!activities.length) throw new Error(`No activity found matching '${args.activity_name}'`);
+            if (!rooms.length) throw new Error(`No room found matching '${args.room_name}'`);
+            return assignSlot(db, args.schedule_id, activities[0].id, rooms[0].id, args.day, args.period);
+        },
+        message: (result) => `[Tool Used: Assign Slot] Slot assigned with id ${result}`
+    }
+}
+
 
 function createToolCreateSchedule(db: D1Database): AiTool {
     return {

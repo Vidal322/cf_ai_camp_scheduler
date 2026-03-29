@@ -40,6 +40,41 @@ export async function createSchedule(
     return result.meta.last_row_id;
 }
 
+export async function assignSlot(
+    db: D1Database,
+    schedule_id: number,
+    activity_id: number,
+    room_id: number,
+    day: number,
+    period: 'morning' | 'afternoon'
+): Promise<number> {
+    const result = await db.prepare(
+        'INSERT INTO ScheduleSlot (schedule_id, activity_id, room_id, day, period) VALUES (?, ?, ?, ?, ?)'
+    ).bind(schedule_id, activity_id, room_id, day, period).run();
+
+    return result.meta.last_row_id;
+}
+
+export async function searchActivities(db: D1Database, query: string): Promise<object[]> {
+    const result = await db.prepare('SELECT id, name, category, description FROM Activity WHERE name LIKE ?').bind(`%${query}%`).all();
+    return result.results;
+}
+
+export async function searchRooms(db: D1Database, query: string): Promise<object[]> {
+    const result = await db.prepare('SELECT id, name, capacity, description FROM Room WHERE name LIKE ? OR description LIKE ?').bind(`%${query}%`, `%${query}%`).all();
+    return result.results;
+}
+
+export async function getActivities(db: D1Database): Promise<object[]> {
+    const result = await db.prepare('SELECT id, name, category, is_indoor, description FROM Activity').all();
+    return result.results;
+}
+
+export async function getRooms(db: D1Database): Promise<object[]> {
+    const result = await db.prepare('SELECT id, name, capacity, is_indoor, description FROM Room').all();
+    return result.results;
+}
+
 export async function createRoom(
     db: D1Database,
     name: string,
