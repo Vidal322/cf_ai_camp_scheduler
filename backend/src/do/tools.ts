@@ -1,4 +1,4 @@
-import { createCamp, createActivity, createRoom, createSchedule, assignSlot, getActivities, getRooms, searchActivities, searchRooms } from '../db/index';
+import { createCamp, createActivity, createRoom, createSchedule, assignSlot, getActivities, getRooms, searchActivities, searchRooms, getSchedule } from '../db/index';
 
 export interface AiTool {
     definition: {
@@ -26,7 +26,8 @@ export function createTools(db: D1Database): Record<string, AiTool> {
         create_schedule: createToolCreateSchedule(db),
         assign_slot: createToolAssignSlot(db),
         get_activities: createToolGetActivities(db),
-        get_rooms: createToolGetRooms(db)
+        get_rooms: createToolGetRooms(db),
+        get_schedule: createToolGetSchedule(db)
     }
 }
 
@@ -89,6 +90,27 @@ function createToolGetRooms(db: D1Database): AiTool {
         },
         handler: () => getRooms(db),
         message: (result) => `[Tool Used: Get Rooms] Rooms: ${JSON.stringify(result)}`
+    }
+}
+
+function createToolGetSchedule(db: D1Database): AiTool {
+    return {
+        definition: {
+            type: 'function',
+            function: {
+                name: 'get_schedule',
+                description: 'Retrieves the full schedule for a camp, showing all assigned activities, rooms, days and periods',
+                parameters: {
+                    type: 'object',
+                    properties: {
+                        camp_id: { type: 'number', description: 'The id of the camp' }
+                    },
+                    required: ['camp_id']
+                }
+            }
+        },
+        handler: (args) => getSchedule(db, args.camp_id),
+        message: (result) => `[Tool Used: Get Schedule] Schedule: ${JSON.stringify(result)}`
     }
 }
 

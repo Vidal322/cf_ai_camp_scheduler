@@ -55,6 +55,19 @@ export async function assignSlot(
     return result.meta.last_row_id;
 }
 
+export async function getSchedule(db: D1Database, camp_id: number): Promise<object[]> {
+    const result = await db.prepare(`
+        SELECT ss.day, ss.period, a.name AS activity, a.category, r.name AS room, r.is_indoor
+        FROM ScheduleSlot ss
+        JOIN Schedule s ON ss.schedule_id = s.id
+        JOIN Activity a ON ss.activity_id = a.id
+        JOIN Room r ON ss.room_id = r.id
+        WHERE s.camp_id = ?
+        ORDER BY ss.day, ss.period
+    `).bind(camp_id).all();
+    return result.results;
+}
+
 export async function searchActivities(db: D1Database, query: string): Promise<object[]> {
     const result = await db.prepare('SELECT id, name, category, description FROM Activity WHERE name LIKE ?').bind(`%${query}%`).all();
     return result.results;
