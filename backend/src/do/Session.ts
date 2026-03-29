@@ -1,5 +1,5 @@
 import { DurableObject} from 'cloudflare:workers';
-import { createCamp } from '../db/camp';
+import { AiTool, createTools } from './tools';
 
 type Env = {
     SESSION: DurableObjectNamespace
@@ -8,32 +8,24 @@ type Env = {
 }
 
 export class Session extends DurableObject<Env> {
+
+    private readonly tools: Record<string, AiTool>;
+
+    private readonly model = '@cf/meta/llama-3.3-70b-instruct-fp8-fast';
+    private readonly actionKeywords = ['create', 'add', 'assign', 'make', 'build', 'new'];
+
+    private readonly systemPrompt;
     constructor(ctx: DurableObjectState, env: Env) {
 
-    super(ctx, env)
-
+        super(ctx, env)
+        this.tools = createTools(this.env.D1Database);
+        this.systemPrompt =  
+            `You are an assistant for building a schedule for summer camps.
+            The user will provide you with information about the camp and you will
+            respond with the schedule as accurately as possible. You have access to the following tools:
+            ${Object.values(this.tools).map(t => `Tool Name: ${t.definition.function.name}, Description: ${t.definition.function.description}`).join('\n')}`;
     }
 
-    private readonly tools = [                                                                                                                                                                  
-        {
-            type: 'function',                                                                                                                                                                   
-            function: {
-                name: 'create_camp',
-                description: 'Creates a new summer camp',                                                                                                                                       
-                parameters: {
-                    type: 'object',                                                                                                                                                             
-                    properties: {
-                        name: { type: 'string', description: 'Name of the camp' },
-                        description: { type: 'string', description: 'Description of the camp' },                                                                                                
-                        quantity: { type: 'number', description: 'Number of campers' },
-                        start_date: { type: 'string', description: 'Start date YYYY-MM-DD' },                                                                                                   
-                        end_date: { type: 'string', description: 'End date YYYY-MM-DD' }
-                    },                                                                                                                                                                          
-                    required: ['name', 'description', 'quantity', 'start_date', 'end_date']
-                }                                                                                                                                                                               
-            }       
-        }
-    ]         
 
     
     /**
@@ -99,53 +91,81 @@ export class Session extends DurableObject<Env> {
     }
 
 
+
+    private async buildMessages(campId: number, message: string) {
+        const contextMessages = await this.retrieveChatHistory(campId);
+        return [
+            { role: 'system', content: this.systemPrompt },
+            ...contextMessages.map(m => ({ role: m.sender, content: m.content })),
+            { role: 'user', content: message }
+        ];
+    }
+    /**
+     * Runs the AI model with the provided messages
+     * Checks if the user message contains action keywords to decide whether to allow tool calls
+     * @param messages 
+     * @param message 
+     * @returns 
+     */
+    private async runAI(messages: any[], message: string) {
+        const isAction = this.actionKeywords.some(k => message.toLowerCase().includes(k));
+        return await this.env.AI.run(this.model, {
+            messages,
+            tool_choice: isAction ? 'auto' : undefined,
+            tools: isAction ? Object.values(this.tools).map(t => t.definition) : undefined
+        }) as { response: string, tool_calls?: any[] };
+    }
+
+    /**
+     * Handles tool calls from the AI model
+     * For each tool call, it executes the corresponding tool handler and gets the result
+     * It then sends a follow-up message to the AI with the tool result and gets the AI response
+     * Finally, it saves the tool message and AI response in the chat history and sends them to the client
+     * @param ws 
+     * @param campId 
+     * @param toolCalls 
+     * @param messages 
+     */
+    private async handleToolCalls(ws: WebSocket, campId: number, toolCalls: any[], messages: any[]) {
+        for (const toolCall of toolCalls) {
+            const tool = this.tools[toolCall.name];
+            if (tool) {
+                const toolResult = await tool.handler(toolCall.arguments);
+                const toolMessage = tool.message(toolResult);
+
+                const followUp = await this.env.AI.run(this.model, {
+                    messages: [...messages, { role: 'assistant', content: toolMessage }]
+                }) as { response: string };
+
+                await this.saveChatMessage(campId, 'ai', followUp.response);
+                ws.send(toolMessage);
+                ws.send(followUp.response);
+            }
+        }
+    }
+
     /**
      * Handles incoming Websocket messages
      * Stores the user message in D1 Database
-     * Retrieves the chat history for the camp
+     * Retrieves the chat history for the camp and builds the messages array for the AI model
      * Sends the message content + Chat History to LLama 3.3 AI API
      * Returns the response to the client
      * @param ws 
      * @param message 
      */
-    async webSocketMessage(ws: WebSocket, message: string ) {
-
+    async webSocketMessage(ws: WebSocket, message: string) {
         const campID = ws.deserializeAttachment().campId;
-
-        const contextMessages = await this.retrieveChatHistory(campID);
         await this.saveChatMessage(campID, 'user', message);
-        const userMessage = {role: 'user', content: message};
 
-        const messages = [
-            {role: 'system', content: 'You are helping build a schedule for a summer camp'},
-            ...contextMessages.map(m => ({role: m.sender, content: m.content})),
-            userMessage
-        ]
+        const messages = await this.buildMessages(campID, message);
+        const response = await this.runAI(messages, message);
 
-
-        const response = await this.env.AI.run('@cf/meta/llama-3.3-70b-instruct-fp8-fast', {
-            messages: messages,
-            tools: this.tools
-        }) as {response: string, tool_calls?: any[]};
-
-        if ('tool_calls' in response && response.tool_calls) {
-            for (const toolCall of response.tool_calls) {
-                if (toolCall.name === 'create_camp') {
-                    const args = toolCall.arguments as {name: string, description: string, quantity: number, start_date: string, end_date: string};
-                    const campId = await createCamp(this.env.D1Database, args.name, args.description, args.quantity, args.start_date, args.end_date);
-                    
-                    ws.send(JSON.stringify({ type: 'tool_result', tool: 'create_camp', campId }));                                                                                                  
-
-                }
-            }
+        if (response.tool_calls && response.tool_calls.length > 0) {
+            await this.handleToolCalls(ws, campID, response.tool_calls, messages);
         } else {
-
             await this.saveChatMessage(campID, 'ai', response.response);
-            ws.send(`response: ${response.response}`);
-        } 
-
-
-
+            ws.send(response.response);
+        }
     }
 
     /**
