@@ -22,19 +22,25 @@
 			}
 		]
 	},
-	"ai": { 
+	"ai": {
 		"binding": "AI",
 		"remote": true,
-	 },
+	},
+	"d1_databases": [
+		{
+			"binding": "D1Database",
+			"database_name": "camps_database",
+			"database_id": "f2fca782-fa53-4c0b-877f-151194da5743"
+		}
+	],
 	"migrations": [
 		{
-		"tag": "v1",
-		"new_sqlite_classes": [
-			"Session"
-		]
+			"tag": "v1",
+			"new_sqlite_classes": [
+				"Session"
+			]
 		}
 	]
-
 	/**
 	 * Smart Placement
 	 * https://developers.cloudflare.com/workers/configuration/smart-placement/#smart-placement
