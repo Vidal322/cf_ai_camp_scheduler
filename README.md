@@ -1,4 +1,4 @@
-# cf_ai_camp
+# cf_ai_camp_scheduler
 
 An AI-powered summer camp schedule builder running on the Cloudflare Developer Platform.
 
