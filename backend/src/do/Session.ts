@@ -91,7 +91,6 @@ export class Session extends DurableObject<Env> {
     }
 
 
-
     private async buildMessages(campId: number, message: string) {
         const contextMessages = await this.retrieveChatHistory(campId);
         return [
@@ -151,8 +150,8 @@ export class Session extends DurableObject<Env> {
 
     /**
      * Handles incoming Websocket messages
-     * Stores the user message in D1 Database
      * Retrieves the chat history for the camp and builds the messages array for the AI model
+     * Stores the user message in D1 Database
      * Sends the message content + Chat History to LLama 3.3 AI API
      * Returns the response to the client
      * @param ws 
@@ -160,9 +159,9 @@ export class Session extends DurableObject<Env> {
      */
     async webSocketMessage(ws: WebSocket, message: string) {
         const campID = ws.deserializeAttachment().campId;
-        await this.saveChatMessage(campID, 'user', message);
 
         const messages = await this.buildMessages(campID, message);
+        await this.saveChatMessage(campID, 'user', message);
         const response = await this.runAI(messages, message);
 
         const toolCallFromResponse =
