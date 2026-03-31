@@ -1,0 +1,85 @@
+.sidebar {
+    background-color: #171717;
+    display: flex;
+    flex-direction: column;
+    flex-shrink: 0;
+    overflow: hidden;
+    transition: width 0.25s ease;
+}
+
+.sidebar.open {
+    width: 260px;
+    padding: 0.75rem;
+}
+
+.sidebar.closed {
+    width: 48px;
+    padding: 0.75rem 0.5rem;
+    align-items: center;
+}
+
+.sidebar-toggle {
+    background: none;
+    border: none;
+    color: rgba(255, 255, 255, 0.5);
+    font-size: 1.4rem;
+    padding: 0.4rem 0.6rem;
+    border-radius: 6px;
+    cursor: pointer;
+    align-self: flex-end;
+    transition: background-color 0.15s;
+}
+
+.sidebar-toggle:hover {
+    background-color: rgba(255, 255, 255, 0.08);
+    color: rgba(255, 255, 255, 0.87);
+    border-color: transparent;
+}
+
+.sidebar-camps {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+    margin-top: 0.75rem;
+    overflow-y: auto;
+}
+
+.camp-item {
+    width: 100%;
+    text-align: left;
+    background: none;
+    border: none;
+    color: rgba(255, 255, 255, 0.6);
+    padding: 0.6rem 0.75rem;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 0.9rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    transition: background-color 0.15s;
+}
+
+.camp-item:hover {
+    background-color: rgba(255, 255, 255, 0.08);
+    color: rgba(255, 255, 255, 0.87);
+    border-color: transparent;
+}
+
+.camp-item.active {
+    background-color: rgba(255, 255, 255, 0.12);
+    color: rgba(255, 255, 255, 0.87);
+}
+
+.add-camp {
+    background: none;
+    border: 1px dashed rgba(255, 255, 255, 0.15);
+    color: rgba(255, 255, 255, 0.25);
+    padding: 0.6rem 0.75rem;
+    border-radius: 8px;
+    font-size: 0.9rem;
+    cursor: not-allowed;
+    margin-top: 0.5rem;
+    text-align: left;
+}
