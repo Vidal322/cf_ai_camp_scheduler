@@ -1,0 +1,29 @@
+.chat-message {                                                                                                                                                                             
+      display: flex;                                                                                                                                                                          
+      margin: 0.5rem 0;                                                                                                                                                                       
+  }                                                                                                                                                                                           
+                                                                                                                                                                                              
+  .chat-message.user {                                                                                                                                                                        
+      justify-content: flex-end;                                                                                                                                                              
+  }                                                                                                                                                                                           
+                  
+  .chat-message.ai {                                                                                                                                                                          
+      justify-content: flex-start;
+  }                                                                                                                                                                                           
+                                                                                                                                                                                              
+  .chat-message p {                                                                                                                                                                           
+      max-width: 60%;                                                                                                                                                                         
+      padding: 0.5rem 1rem;                                                                                                                                                                   
+      border-radius: 8px;                                                                                                                                                                     
+      margin: 0;                                                                                                                                                                              
+  }                                                                                                                                                                                           
+                                                                                                                                                                                              
+  .chat-message.user p {                                                                                                                                                                      
+      color: black;
+      background-color: #e8e8e8;                                                                                                                                                              
+  }                                                                                                                                                                                           
+                  
+  .chat-message.ai p {                                                                                                                                                                        
+      color: black;
+      background-color: #999494;
+  }                

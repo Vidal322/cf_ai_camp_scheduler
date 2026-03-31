@@ -1,7 +1,7 @@
 import { useEffect, useState, useRef} from 'react'
 
 
-export type MessageChat = {
+export type ChatMessage = {
     id: number
     content: string
     sender: 'user' | 'ai'
@@ -9,7 +9,7 @@ export type MessageChat = {
 
 
 export function useChat(url: string) {
-    const [messages, setMessages] = useState<MessageChat[]>([])
+    const [messages, setMessages] = useState<ChatMessage[]>([])
     const [status, setStatus] = useState<'open' | 'closed' | 'error' | 'connecting'>('connecting')
     const wsRef = useRef<WebSocket | null>(null)
     const nextId = useRef(0)
@@ -20,7 +20,7 @@ export function useChat(url: string) {
                                                                                                                                                                                               
       ws.onopen = function() { setStatus('open') }                                                                                                                                            
       ws.onmessage = function(event) {  
-        const message: MessageChat = {
+        const message: ChatMessage = {
             id: nextId.current++,
             content: event.data,
             sender: 'ai'
@@ -40,7 +40,7 @@ export function useChat(url: string) {
 
     function sendMessage(content: string) {
         if (wsRef.current?.readyState === WebSocket.OPEN) {
-            const message: MessageChat = {
+            const message: ChatMessage = {
                 id: nextId.current++,
                 content,
                 sender: 'user'
