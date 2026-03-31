@@ -1,5 +1,6 @@
 import './App.css'
 import { ChatMessage } from './components/ChatMessage'
+import { InputBar } from './components/InputBar'
 import { useChat } from './hooks/useChat'
 
 function App() {
@@ -9,12 +10,7 @@ function App() {
   console.log('Chat messages:', messages)
   return (
     <>
-      <button className=''
-        onClick={() => sendMessage('Hello, AI!')}
-      >
-        Send Message to AI
-      </button>
-
+      <InputBar sendMessage={sendMessage} status={status} />
       <p>                                                                                                                                                                                         
         Last Message: {messages.length > 0 ? messages[messages.length - 1].content : 'No messages yet'}
       </p>    
