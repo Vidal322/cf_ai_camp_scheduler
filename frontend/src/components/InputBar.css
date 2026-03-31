@@ -3,32 +3,33 @@
     display: flex;
     align-items: center;
     gap: 0.5rem;
-    background-color: #f4f4f4;
+    background-color: #2f2f2f;
     border-radius: 16px;
     padding: 0.75rem 1rem;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
 }
 
 .input-bar input {
-    color: black;
+    color: rgba(255, 255, 255, 0.87);
     flex: 1;
     border: none;
     background: transparent;
     font-size: 1rem;
     outline: none;
-}                                                                                                                                                                           
- 
-.input-bar button { 
-    background-color: #000; 
-    color: #fff; 
-    border: none; 
-    border-radius: 8px; 
-    padding: 0.5rem 1rem; 
-    cursor: pointer; 
-    font-size: 0.9rem; 
-} 
-                                                                                                                                                                                            
-.input-bar button:disabled { 
-    background-color: #ccc; 
-    cursor: not-allowed; 
+}
+
+.input-bar button {
+    background-color: #ffffff;
+    color: #212121;
+    border: none;
+    border-radius: 8px;
+    padding: 0.5rem 1rem;
+    cursor: pointer;
+    font-size: 0.9rem;
+}
+
+.input-bar button:disabled {
+    background-color: #555;
+    color: #888;
+    cursor: not-allowed;
 }

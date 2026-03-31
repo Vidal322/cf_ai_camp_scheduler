@@ -18,12 +18,12 @@
     margin: 0; 
 } 
 
-.chat-message.user p { 
-    color: black;
-    background-color: #e8e8e8; 
-} 
- 
-.chat-message.ai p { 
-    color: black;
-    background-color: #999494;
+.chat-message.user p {
+    color: rgba(255, 255, 255, 0.87);
+    background-color: #2f2f2f;
+}
+
+.chat-message.ai p {
+    color: rgba(255, 255, 255, 0.87);
+    background-color: #1a1a1a;
 } 
