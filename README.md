@@ -48,6 +48,12 @@ cd backend
 npm install
 ```
 
+Create a `.dev.vars` file for local environment variables:
+
+```bash
+echo "ALLOWED_ORIGIN=http://localhost:5173" > .dev.vars
+```
+
 Apply the D1 migration locally:
 
 ```bash
@@ -104,17 +110,16 @@ The frontend dev server will be available at `http://localhost:5173`.
 
 ---
 
-## TODO
+## Potential Improvements
 
-- [ ] Finish the chat UI
-- [ ] Schedule Display in the Frontend
-- [ ] Use DO's own storage as cache
-- [ ] Stream AI responses instead of sending the full reply at once
-- [ ] Conflict detection — prevent double-booking a room for the same day and period
-- [ ] Multi-user sessions — currently all users share a single hardcoded DO session
-- [ ] Add delete / update AI tools — the AI can only create entries, not edit or remove them
-- [ ] Export schedule as CSV or PDF
-- [ ] Add deploy instructions
+- **WebSocket reconnection** — automatically reconnect with backoff if the connection drops, and surface the status to the user
+- **Streaming AI responses** — stream tokens as they arrive instead of waiting for the full reply, using Workers AI's streaming support
+- **Schedule conflict detection** — reject `assign_slot` calls that double-book a room for the same day and period
+- **Weather-aware scheduling** — integrate a weather API to prefer indoor activities on rainy days when building a schedule
+- **Schedule comparison** — side-by-side diff view when a camp has multiple schedules
+- **Delete / update tools** — give the AI the ability to remove or modify existing slots, activities, and rooms
+- **Authentication** — gate the app behind Cloudflare Access or a simple auth layer so only authorized users can manage camps
+- **Export** — download a schedule as CSV or PDF directly from the UI
 
 ---
 
@@ -131,6 +136,6 @@ The AI assistant has access to the following tools:
 | `assign_slot` | Assigns an activity + room to a day and period |
 | `get_activities` | Lists all available activities |
 | `get_rooms` | Lists all available rooms |
-| `get_schedule` | Retrieves the full schedule for a camp |
+| `get_schedule` | Retrieves the full schedule for a given schedule ID |
 
 The AI automatically decides whether to call tools based on message intent — action phrases like "create", "add", "assign" trigger tool use, while questions get direct answers.
