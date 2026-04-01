@@ -17,45 +17,47 @@ export function useChat(url: string, campId: number, onToolResponse?: () => void
     useEffect(function() {
         setMessages([])
         nextId.current = 0
+        setStatus('connecting')
+
+        let ws: WebSocket | null = null
+        let cancelled = false
 
         const historyUrl = `${import.meta.env.VITE_API_URL}/history?camp-id=${campId}`
         fetch(historyUrl)
             .then(r => r.json<{sender: string, content: string}[]>())
             .then(history => {
+                if (cancelled) return
                 setMessages(history.map(m => ({
                     id: nextId.current++,
                     content: m.content,
                     sender: m.sender as 'user' | 'ai'
                 })))
+
+                ws = new WebSocket(url)
+                wsRef.current = ws
+
+                ws.onopen = function() { setStatus('open') }
+                ws.onmessage = function(event) {
+                    const message: ChatMessage = {
+                        id: nextId.current++,
+                        content: event.data,
+                        sender: 'ai'
+                    }
+                    setMessages(prev => [...prev, message])
+                    if (event.data.startsWith('[Tool Used:')) {
+                        onToolResponse?.()
+                    }
+                }
+                ws.onerror = function() { setStatus('error') }
+                ws.onclose = function() { setStatus('closed') }
             })
             .catch(e => console.error('Failed to load history:', e))
-    }, [campId])
 
-  useEffect(function() {
-      const ws = new WebSocket(url)
-
-      ws.onopen = function() { setStatus('open') }
-      ws.onmessage = function(event) {
-        const message: ChatMessage = {
-            id: nextId.current++,
-            content: event.data,
-            sender: 'ai'
+        return function cleanup() {
+            cancelled = true
+            ws?.close()
         }
-        setMessages(prev => [...prev, message])
-        if (event.data.startsWith('[Tool Used:')) {
-            onToolResponse?.()
-        }
-
-    }
-      ws.onerror = function() { setStatus('error') }
-      ws.onclose = function() { setStatus('closed') }
-
-      wsRef.current = ws
-
-      return function cleanup() {
-          ws.close()
-      }
-  }, [url])
+    }, [url, campId])
 
     function sendMessage(content: string) {
         if (wsRef.current?.readyState === WebSocket.OPEN) {
