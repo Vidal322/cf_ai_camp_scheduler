@@ -13,6 +13,7 @@ function App() {
     const [selectedCampId, setSelectedCampId] = useState<number | null>(null)
     const [sidebarOpen, setSidebarOpen] = useState(true)
     const [tab, setTab] = useState<'chat' | 'schedule'>('chat')
+    const [scheduleKey, setScheduleKey] = useState(0)
 
     const loadCamps = useCallback(async () => {
         const res = await fetch(`${API_URL}/camps`)
@@ -53,8 +54,8 @@ function App() {
                         <button className={tab === 'schedule' ? 'active' : ''} onClick={() => setTab('schedule')}>Schedule</button>
                     </div>
                     {tab === 'chat'
-                        ? <ChatWindow campId={selectedCampId} />
-                        : <ScheduleTable campId={selectedCampId} />
+                        ? <ChatWindow campId={selectedCampId} onToolResponse={() => setScheduleKey(k => k + 1)} />
+                        : <ScheduleTable key={scheduleKey} campId={selectedCampId} />
                     }
                 </div>
             )}

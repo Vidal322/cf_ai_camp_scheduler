@@ -3,9 +3,9 @@ import { ChatMessage } from './ChatMessage'
 import { InputBar } from './InputBar'
 import './ChatWindow.css'
 
-export function ChatWindow({ campId }: { campId: number }) {
+export function ChatWindow({ campId, onToolResponse }: { campId: number, onToolResponse?: () => void }) {
     const wsUrl = `${import.meta.env.VITE_WS_URL}?camp-id=${campId}`
-    const { messages, status, sendMessage } = useChat(wsUrl, campId)
+    const { messages, status, sendMessage } = useChat(wsUrl, campId, onToolResponse)
 
     return (
         <div className='chat-window-container'>

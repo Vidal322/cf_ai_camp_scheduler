@@ -8,7 +8,7 @@ export type ChatMessage = {
 }
 
 
-export function useChat(url: string, campId: number) {
+export function useChat(url: string, campId: number, onToolResponse?: () => void) {
     const [messages, setMessages] = useState<ChatMessage[]>([])
     const [status, setStatus] = useState<'open' | 'closed' | 'error' | 'connecting'>('connecting')
     const wsRef = useRef<WebSocket | null>(null)
@@ -42,6 +42,9 @@ export function useChat(url: string, campId: number) {
             sender: 'ai'
         }
         setMessages(prev => [...prev, message])
+        if (event.data.startsWith('[Tool Used:')) {
+            onToolResponse?.()
+        }
 
     }
       ws.onerror = function() { setStatus('error') }
