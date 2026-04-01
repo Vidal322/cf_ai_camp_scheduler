@@ -168,20 +168,25 @@ export class Session extends DurableObject<Env> {
     async webSocketMessage(ws: WebSocket, message: string) {
         const campID = ws.deserializeAttachment().campId;
 
-        const messages = await this.buildMessages(campID, message);
-        await this.saveChatMessage(campID, 'user', message);
-        const response = await this.runAI(messages, message);
+        try {
+            const messages = await this.buildMessages(campID, message);
+            await this.saveChatMessage(campID, 'user', message);
+            const response = await this.runAI(messages, message);
 
-        const toolCallFromResponse =
-            response.response && typeof response.response === 'object' && (response.response as any).type === 'function'
-                ? [response.response as any]
-                : response.tool_calls;
+            const toolCallFromResponse =
+                response.response && typeof response.response === 'object' && (response.response as any).type === 'function'
+                    ? [response.response as any]
+                    : response.tool_calls;
 
-        if (toolCallFromResponse && toolCallFromResponse.length > 0) {
-            await this.handleToolCalls(ws, campID, toolCallFromResponse, messages);
-        } else {
-            await this.saveChatMessage(campID, 'ai', response.response);
-            ws.send(response.response);
+            if (toolCallFromResponse && toolCallFromResponse.length > 0) {
+                await this.handleToolCalls(ws, campID, toolCallFromResponse, messages);
+            } else {
+                await this.saveChatMessage(campID, 'ai', response.response);
+                ws.send(response.response);
+            }
+        } catch (e) {
+            console.error('Error processing message:', e);
+            ws.send('An error occurred while processing your message.');
         }
     }
 
@@ -192,8 +197,10 @@ export class Session extends DurableObject<Env> {
      * @param reason 
      */
     async webSocketClose(ws: WebSocket, code: number, reason: string) {
-    
-        ws.close(code,reason);
+
+        if (ws.readyState === WebSocket.OPEN) {
+            ws.close(code, reason);
+        }
 
     }
 

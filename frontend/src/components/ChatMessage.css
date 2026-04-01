@@ -11,19 +11,32 @@
     justify-content: flex-start;
 } 
  
-.chat-message p { 
-    max-width: 60%; 
-    padding: 0.5rem 1rem; 
-    border-radius: 8px; 
-    margin: 0; 
-} 
+.chat-message p,
+.chat-message .markdown {
+    max-width: 60%;
+    padding: 0.5rem 1rem;
+    border-radius: 8px;
+    margin: 0;
+}
 
 .chat-message.user p {
     color: rgba(255, 255, 255, 0.87);
     background-color: #2f2f2f;
 }
 
-.chat-message.ai p {
+.chat-message.ai .markdown {
     color: rgba(255, 255, 255, 0.87);
     background-color: #1a1a1a;
+}
+
+.chat-message.ai .markdown > * {
+    margin: 0.25rem 0;
+}
+
+.chat-message.ai .markdown > *:first-child {
+    margin-top: 0;
+}
+
+.chat-message.ai .markdown > *:last-child {
+    margin-bottom: 0;
 } 
