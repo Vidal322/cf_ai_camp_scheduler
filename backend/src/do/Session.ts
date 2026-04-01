@@ -144,6 +144,7 @@ export class Session extends DurableObject<Env> {
                 const toolResult = await tool.handler(args);
                 const toolMessage = tool.message(toolResult);
                 ws.send(toolMessage);
+                await this.saveChatMessage(campId, 'ai', toolMessage);
 
                 const followUp = await this.env.AI.run(this.model, {
                     messages: [...messages, { role: 'assistant', content: toolMessage }]
