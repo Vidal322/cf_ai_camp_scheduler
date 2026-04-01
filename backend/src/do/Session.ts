@@ -74,7 +74,7 @@ export class Session extends DurableObject<Env> {
      * @param content
      */
     async saveChatMessage(campId: number, sender: 'user' | 'ai', content: string) {
-        this.env.D1Database.prepare('INSERT INTO ChatMessage (sender, camp_id, content) VALUES (?, ?, ?)').bind(sender, campId, content).run();
+        await this.env.D1Database.prepare('INSERT INTO ChatMessage (sender, camp_id, content) VALUES (?, ?, ?)').bind(sender, campId, content).run();
         const cached = this.messageCache.get(campId);
         if (cached) {
             cached.push({ sender, content });
