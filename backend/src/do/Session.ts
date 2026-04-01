@@ -10,6 +10,7 @@ type Env = {
 export class Session extends DurableObject<Env> {
 
     private readonly tools: Record<string, AiTool>;
+    private readonly messageCache = new Map<number, {sender: string, content: string}[]>();
 
     private readonly model = '@cf/meta/llama-3.3-70b-instruct-fp8-fast';
     private readonly actionKeywords = ['create', 'add', 'assign', 'assignslot', 'assign slot', 'make', 'build', 'new', 'there is', 'i have a', 'set up'];
@@ -50,21 +51,27 @@ export class Session extends DurableObject<Env> {
      * @returns 
      */
     async retrieveChatHistory(campId: number) {
-        
+        if (this.messageCache.has(campId)) {
+            return this.messageCache.get(campId)!;
+        }
         const result = await this.env.D1Database.prepare('SELECT sender, content FROM ChatMessage WHERE camp_id = ? ORDER BY created_at ASC').bind(campId).all();
-        return result.results as {sender: string, content: string}[];
-
+        const messages = result.results as {sender: string, content: string}[];
+        this.messageCache.set(campId, messages);
+        return messages;
     }
+
     /**
      *  Saves message with camp_id, sender and content into D1 Database
-     * @param campId 
-     * @param sender 
-     * @param content 
+     * @param campId
+     * @param sender
+     * @param content
      */
     async saveChatMessage(campId: number, sender: 'user' | 'ai', content: string) {
-
         this.env.D1Database.prepare('INSERT INTO ChatMessage (sender, camp_id, content) VALUES (?, ?, ?)').bind(sender, campId, content).run();
-        
+        const cached = this.messageCache.get(campId);
+        if (cached) {
+            cached.push({ sender, content });
+        }
     }
 
     /**
