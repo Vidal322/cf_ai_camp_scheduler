@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from 'react'
 import { ChatWindow } from './components/ChatWindow'
+import { ScheduleTable } from './components/ScheduleTable'
 import { Sidebar } from './components/Sidebar'
 import './App.css'
 
@@ -11,6 +12,7 @@ function App() {
     const [camps, setCamps] = useState<Camp[]>([])
     const [selectedCampId, setSelectedCampId] = useState<number | null>(null)
     const [sidebarOpen, setSidebarOpen] = useState(true)
+    const [tab, setTab] = useState<'chat' | 'schedule'>('chat')
 
     const loadCamps = useCallback(async () => {
         const res = await fetch(`${API_URL}/camps`)
@@ -39,12 +41,23 @@ function App() {
             <Sidebar
                 camps={camps}
                 selectedCampId={selectedCampId}
-                onSelectCamp={setSelectedCampId}
+                onSelectCamp={(id) => { setSelectedCampId(id); setTab('chat') }}
                 isOpen={sidebarOpen}
                 onToggle={() => setSidebarOpen(o => !o)}
                 onAddCamp={handleAddCamp}
             />
-            {selectedCampId !== null && <ChatWindow campId={selectedCampId} />}
+            {selectedCampId !== null && (
+                <div className="main-content">
+                    <div className="tab-bar">
+                        <button className={tab === 'chat' ? 'active' : ''} onClick={() => setTab('chat')}>Chat</button>
+                        <button className={tab === 'schedule' ? 'active' : ''} onClick={() => setTab('schedule')}>Schedule</button>
+                    </div>
+                    {tab === 'chat'
+                        ? <ChatWindow campId={selectedCampId} />
+                        : <ScheduleTable campId={selectedCampId} />
+                    }
+                </div>
+            )}
         </div>
     )
 }
