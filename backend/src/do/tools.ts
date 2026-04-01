@@ -103,13 +103,13 @@ function createToolGetSchedule(db: D1Database): AiTool {
                 parameters: {
                     type: 'object',
                     properties: {
-                        camp_id: { type: 'number', description: 'The id of the camp' }
+                        schedule_id: { type: 'number', description: 'The id of the schedule' }
                     },
-                    required: ['camp_id']
+                    required: ['schedule_id']
                 }
             }
         },
-        handler: (args) => getSchedule(db, args.camp_id),
+        handler: (args) => getSchedule(db, args.schedule_id),
         message: (result) => `[Tool Used: Get Schedule] Schedule: ${JSON.stringify(result)}`
     }
 }
