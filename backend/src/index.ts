@@ -1,7 +1,7 @@
 import {Hono} from 'hono'
 import {cors} from 'hono/cors'
 import {Session} from './do/Session';
-import {getCamps, createCamp, deleteCamp, getSchedule} from './db/index';
+import {getCamps, createCamp, deleteCamp, getSchedules, getSchedule} from './db/index';
 
 type Bindings = {
 	SESSION: DurableObjectNamespace<Session>
@@ -37,9 +37,15 @@ app.get('/camps', async (c) => {
 	return c.json(camps);
 })
 
-app.get('/schedule', async (c) => {
+app.get('/schedules', async (c) => {
 	const campId = Number(c.req.query('camp-id'))
-	const schedule = await getSchedule(c.env.D1Database, campId)
+	const schedules = await getSchedules(c.env.D1Database, campId)
+	return c.json(schedules)
+})
+
+app.get('/schedule', async (c) => {
+	const scheduleId = Number(c.req.query('schedule-id'))
+	const schedule = await getSchedule(c.env.D1Database, scheduleId)
 	return c.json(schedule)
 })
 

@@ -1,6 +1,8 @@
 import { useEffect, useState } from 'react'
 import './ScheduleTable.css'
 
+type Schedule = { id: number }
+
 type Slot = {
     day: number
     period: string
@@ -15,21 +17,52 @@ const PERIODS = ['morning', 'afternoon']
 const API_URL = import.meta.env.VITE_API_URL
 
 export function ScheduleTable({ campId }: { campId: number }) {
+    const [schedules, setSchedules] = useState<Schedule[]>([])
+    const [selectedId, setSelectedId] = useState<number | null>(null)
     const [slots, setSlots] = useState<Slot[]>([])
 
     useEffect(() => {
-        fetch(`${API_URL}/schedule?camp-id=${campId}`)
-            .then(r => r.json<Slot[]>())
+        setSchedules([])
+        setSelectedId(null)
+        setSlots([])
+        fetch(`${API_URL}/schedules?camp-id=${campId}`)
+            .then(r => r.json())
+            .then(data => {
+                setSchedules(data)
+                if (data.length > 0) setSelectedId(data[0].id)
+            })
+            .catch(e => console.error('Failed to load schedules:', e))
+    }, [campId])
+
+    useEffect(() => {
+        if (selectedId === null) return
+        fetch(`${API_URL}/schedule?schedule-id=${selectedId}`)
+            .then(r => r.json())
             .then(setSlots)
             .catch(e => console.error('Failed to load schedule:', e))
-    }, [campId])
+    }, [selectedId])
 
     function getSlot(day: number, period: string) {
         return slots.find(s => s.day === day && s.period === period)
     }
 
+    if (schedules.length === 0) {
+        return <div className="schedule-empty">No schedules yet. Ask the AI to create one.</div>
+    }
+
     return (
         <div className="schedule-container">
+            <div className="schedule-tabs">
+                {schedules.map((s, i) => (
+                    <button
+                        key={s.id}
+                        className={`schedule-tab ${s.id === selectedId ? 'active' : ''}`}
+                        onClick={() => setSelectedId(s.id)}
+                    >
+                        Schedule {i + 1}
+                    </button>
+                ))}
+            </div>
             <table className="schedule-table">
                 <thead>
                     <tr>
