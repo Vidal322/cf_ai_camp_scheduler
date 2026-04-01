@@ -1,3 +1,7 @@
+export async function deleteCamp(db: D1Database, id: number): Promise<void> {
+    await db.prepare('DELETE FROM Camp WHERE id = ?').bind(id).run();
+}
+
 export async function getCamps(db: D1Database): Promise<{id: number, name: string}[]> {
     const result = await db.prepare('SELECT id, name FROM Camp ORDER BY id ASC').all();
     return result.results as {id: number, name: string}[];

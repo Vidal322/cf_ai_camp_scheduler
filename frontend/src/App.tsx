@@ -26,6 +26,14 @@ function App() {
 
     useEffect(() => { loadCamps() }, [loadCamps])
 
+    async function handleDeleteCamp(id: number) {
+        await fetch(`${API_URL}/camps/${id}`, { method: 'DELETE' })
+        setCamps(prev => prev.filter(c => c.id !== id))
+        if (selectedCampId === id) {
+            setSelectedCampId(camps.find(c => c.id !== id)?.id ?? null)
+        }
+    }
+
     async function handleAddCamp(camp: Omit<Camp, 'id'> & { description: string, quantity: number, start_date: string, end_date: string }) {
         const res = await fetch(`${API_URL}/camps`, {
             method: 'POST',
@@ -46,6 +54,7 @@ function App() {
                 isOpen={sidebarOpen}
                 onToggle={() => setSidebarOpen(o => !o)}
                 onAddCamp={handleAddCamp}
+                onDeleteCamp={handleDeleteCamp}
             />
             {selectedCampId !== null && (
                 <div className="main-content">

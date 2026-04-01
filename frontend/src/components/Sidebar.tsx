@@ -11,11 +11,12 @@ type SidebarProps = {
     isOpen: boolean
     onToggle: () => void
     onAddCamp: (camp: NewCampForm) => Promise<void>
+    onDeleteCamp: (id: number) => Promise<void>
 }
 
 const EMPTY_FORM: NewCampForm = { name: '', description: '', quantity: 0, start_date: '', end_date: '' }
 
-export function Sidebar({ camps, selectedCampId, onSelectCamp, isOpen, onToggle, onAddCamp }: SidebarProps) {
+export function Sidebar({ camps, selectedCampId, onSelectCamp, isOpen, onToggle, onAddCamp, onDeleteCamp }: SidebarProps) {
     const [showForm, setShowForm] = useState(false)
     const [form, setForm] = useState<NewCampForm>(EMPTY_FORM)
     const [submitting, setSubmitting] = useState(false)
@@ -38,13 +39,21 @@ export function Sidebar({ camps, selectedCampId, onSelectCamp, isOpen, onToggle,
                 <>
                     <div className="sidebar-camps">
                         {camps.map(camp => (
-                            <button
-                                key={camp.id}
-                                className={`camp-item ${camp.id === selectedCampId ? 'active' : ''}`}
-                                onClick={() => onSelectCamp(camp.id)}
-                            >
-                                {camp.name}
-                            </button>
+                            <div key={camp.id} className="camp-row">
+                                <button
+                                    className={`camp-item ${camp.id === selectedCampId ? 'active' : ''}`}
+                                    onClick={() => onSelectCamp(camp.id)}
+                                >
+                                    {camp.name}
+                                </button>
+                                <button
+                                    className="camp-delete"
+                                    onClick={() => onDeleteCamp(camp.id)}
+                                    title="Delete camp"
+                                >
+                                    ×
+                                </button>
+                            </div>
                         ))}
                     </div>
 
