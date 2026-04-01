@@ -5,7 +5,7 @@ import './ChatWindow.css'
 
 export function ChatWindow({ campId }: { campId: number }) {
     const wsUrl = `${import.meta.env.VITE_WS_URL}?camp-id=${campId}`
-    const { messages, status, sendMessage } = useChat(wsUrl)
+    const { messages, status, sendMessage } = useChat(wsUrl, campId)
 
     return (
         <div className='chat-window-container'>

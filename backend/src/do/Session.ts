@@ -41,7 +41,14 @@ export class Session extends DurableObject<Env> {
         if (request.headers.get('Upgrade') === 'websocket') {
             return this.handleWebSocket(request);
         }
-        // Handle other HTTP requests here
+
+        const url = new URL(request.url);
+        if (request.method === 'GET' && url.pathname === '/history') {
+            const campId = Number(url.searchParams.get('camp-id'));
+            const messages = await this.retrieveChatHistory(campId);
+            return Response.json(messages);
+        }
+
         return new Response('Invalid request', { status: 400 });
     }
 
