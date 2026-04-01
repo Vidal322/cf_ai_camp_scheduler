@@ -1,3 +1,8 @@
+export async function getCamps(db: D1Database): Promise<{id: number, name: string}[]> {
+    const result = await db.prepare('SELECT id, name FROM Camp ORDER BY id ASC').all();
+    return result.results as {id: number, name: string}[];
+}
+
 export async function createCamp(
     db: D1Database,
     name: string,
